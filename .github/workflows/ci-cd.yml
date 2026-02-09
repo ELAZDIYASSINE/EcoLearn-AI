@@ -1,0 +1,100 @@
+name: EcoLearn CI/CD
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  tests:
+    name: Backend tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      - name: Run pytest
+        working-directory: backend
+        run: |
+          pytest
+
+  quality:
+    name: Lint & Sonar
+    runs-on: ubuntu-latest
+    needs: tests
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      - name: Run flake8
+        working-directory: backend
+        run: flake8 app
+
+      - name: Run black check
+        working-directory: backend
+        run: black --check app
+
+      # Exemple de step SonarCloud (à activer avec vos secrets)
+      # - name: SonarCloud Scan
+      #   uses: SonarSource/sonarcloud-github-action@v2
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      #   with:
+      #     projectBaseDir: .
+
+  build:
+    name: Build Docker images
+    runs-on: ubuntu-latest
+    needs: quality
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend image
+        run: docker build -f backend/Dockerfile -t ecolearn-api:ci .
+
+      - name: Build frontend image
+        run: docker build -f frontend/Dockerfile -t ecolearn-frontend:ci .
+
+  deploy:
+    name: Deploy to AWS ECS (stub)
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: AWS ECS deploy placeholder
+        run: |
+          echo "Ici vous brancherez votre pipeline de déploiement AWS ECS (Fargate / EC2)."
+          echo "Utilisez par exemple aws-actions/configure-aws-credentials et amazon-ecs-deploy-task-definition."
+

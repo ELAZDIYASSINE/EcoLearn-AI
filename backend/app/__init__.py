@@ -1,0 +1,4 @@
+"""
+EcoLearn AI backend package.
+"""
+

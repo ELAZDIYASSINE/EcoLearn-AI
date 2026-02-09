@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: ecolearn-db
+    environment:
+      POSTGRES_USER: eco_user
+      POSTGRES_PASSWORD: eco_pass
+      POSTGRES_DB: ecolearn
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: ecolearn-api
+    environment:
+      DATABASE_URL: postgresql://eco_user:eco_pass@db:5432/ecolearn
+      ENVIRONMENT: local
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: ecolearn-frontend
+    depends_on:
+      - api
+    ports:
+      - "8080:80"
+
+volumes:
+  db_data:
+
